@@ -2,7 +2,7 @@
 :root {
   --bone:#efebe3; --bone-soft:#e7e1d4; --bone-warm:#ddd5c2; --rule:#d9d2c4;
   --ink:#0e0e0e; --ink-soft:#2a2925; --ink-mute:#6f6a5e; --ink-faint:#a8a193;
-  --accent:#a04f3a;
+  --accent:#c08a3e;
   --display:"Instrument Serif", Georgia, serif;
   --sans:"Inter", -apple-system, system-ui, sans-serif;
   --frame-pad:clamp(20px,5vw,64px); --max:1240px;

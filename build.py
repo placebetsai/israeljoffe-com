@@ -17,12 +17,13 @@ TAGLINE = os.environ.get('TAGLINE', 'Media Executive · IT Specialist · Firefig
 HERO_LINE_1 = os.environ.get('HERO_LINE_1', 'Israel')
 HERO_LINE_2 = os.environ.get('HERO_LINE_2', 'Joffe.')
 
-posts = json.load(open(f'{ROOT}/_data/posts.json'))
+all_pages = json.load(open(f'{ROOT}/_data/posts.json'))
 img_map = json.load(open(f'{ROOT}/_data/img-map.json'))
 
-# Filter & sort: keep posts with date, sort newest first
-posts = [p for p in posts if p.get('date')]
+# Posts = dated entries, displayed in archive/grid
+posts = [p for p in all_pages if p.get('date')]
 posts.sort(key=lambda p: p['date'], reverse=True)
+# Pages = ALL crawled (used for backlink aggregation, since DC links live in undated pages too)
 
 def rewrite_imgs(body):
     """Replace external image URLs with local /img/ versions."""
@@ -55,15 +56,16 @@ def fmt_date(iso):
 def post_url(p):
     return '/' + p['url'].split('://')[1].split('/', 1)[1].rstrip('/') + '/'
 
-# --- Aggregate external links across all posts ---
+# --- Aggregate external links across ALL crawled pages (not just dated posts) ---
 ext_by_host = {}  # host -> [{url, anchor, source_post_url, source_post_title, date}]
-for p in posts:
+for p in all_pages:
+    src = post_url(p) if p.get('date') else (p['url'].replace('https://israeljoffe.com', '').replace('https://israeljoffe.org', '') or '/')
     for L in p.get('external_links', []):
         host = L['host']
         if not host: continue
         ext_by_host.setdefault(host, []).append({
-            'url': L['url'], 'anchor': L['anchor'] or host, 'source': post_url(p),
-            'source_title': p['title'], 'date': p['date'],
+            'url': L['url'], 'anchor': L['anchor'] or host, 'source': src,
+            'source_title': p['title'], 'date': p.get('date',''),
         })
 
 # Pick out featured groups
