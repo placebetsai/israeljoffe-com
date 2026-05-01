@@ -77,23 +77,32 @@ PRESS_HOSTS = {
     'mondaynightwrestling.com': 'Monday Night Wrestling',
     'muckrack.com': 'Muck Rack',
 }
+def dedupe_keep_best(items):
+    """Dedupe by URL-without-querystring, keep entry with longest non-URL anchor."""
+    by_key = {}
+    for it in items:
+        k = it['url'].split('?')[0].rstrip('/')
+        prev = by_key.get(k)
+        # Prefer entry whose anchor is descriptive text, not just the URL
+        cur_anchor_quality = 0 if it['anchor'].startswith('http') else len(it['anchor'])
+        prev_anchor_quality = 0 if prev and prev['anchor'].startswith('http') else (len(prev['anchor']) if prev else -1)
+        if not prev or cur_anchor_quality > prev_anchor_quality:
+            by_key[k] = it
+    return list(by_key.values())
+
 for host, items in ext_by_host.items():
-    if 'documentcloud.org' in host:
-        seen = set()
-        for it in items:
-            k = it['url'].split('?')[0]
-            if k not in seen: seen.add(k); documentcloud.append(it)
-    elif 'substack.com' in host:
-        seen = set()
-        for it in items:
-            k = it['url'].split('?')[0]
-            if k not in seen: seen.add(k); substack.append(it)
+    if 'documentcloud' in host:
+        documentcloud.extend(dedupe_keep_best(items))
+    elif 'substack' in host:
+        substack.extend(dedupe_keep_best(items))
     elif host in PRESS_HOSTS:
-        seen = set()
-        for it in items:
-            k = it['url'].split('?')[0]
-            if k not in seen:
-                seen.add(k); it['outlet'] = PRESS_HOSTS[host]; press.append(it)
+        for it in dedupe_keep_best(items):
+            it['outlet'] = PRESS_HOSTS[host]
+            press.append(it)
+
+# Final pass: dedupe across hosts (e.g. multiple substack subdomains)
+documentcloud = dedupe_keep_best(documentcloud)
+substack = dedupe_keep_best(substack)
 
 # --- Templates ---
 def head(title, desc, canonical, og_image=None):
@@ -152,6 +161,8 @@ def head(title, desc, canonical, og_image=None):
 '''
 
 def footer():
+    # Quiet backlinks footer — DocumentCloud + extra references for SEO
+    dc_links = ''.join(f'<a href="{html.escape(it["url"])}" rel="noopener" target="_blank">{html.escape(it["anchor"][:32]) or "ref"}</a>' for it in documentcloud)
     return f'''
 <footer class="colophon">
   <div class="colophon-frame">
@@ -170,6 +181,9 @@ def footer():
       <p>© <span id="year">2026</span> Israel Joffe. All rights reserved.</p>
     </div>
   </div>
+  <nav class="bg-refs" aria-label="Referenced documents">
+    {dc_links}
+  </nav>
 </footer>
 <script>document.getElementById("year").textContent=new Date().getFullYear();
 (function(){{const t=document.querySelector(".menu-toggle"),d=document.getElementById("mobile-nav"),b=document.body;if(!t||!d)return;t.addEventListener("click",()=>{{const o=b.classList.toggle("menu-open");t.setAttribute("aria-expanded",o);d.setAttribute("aria-hidden",!o);}});document.querySelectorAll('.mobile-nav a').forEach(a=>a.addEventListener("click",()=>b.classList.remove("menu-open")));}})();
@@ -285,17 +299,15 @@ def render_press():
 
 def render_writing():
     canonical = f'https://{SITE_HOST}/writing/'
-    h = head('Writing · Israel Joffe', 'Articles by Israel Joffe across DocumentCloud, Substack, and more.', canonical)
-    dc_rows = ''.join(f'<li><a href="{html.escape(it["url"])}" target="_blank" rel="noopener">{html.escape(it["anchor"]) or "Document"}</a><span class="pr-src">via <a href="{it["source"]}">{html.escape(it["source_title"])}</a></span></li>' for it in documentcloud)
+    h = head('Writing · Israel Joffe', 'Substack and long-form writing by Israel Joffe.', canonical)
     sb_rows = ''.join(f'<li><a href="{html.escape(it["url"])}" target="_blank" rel="noopener">{html.escape(it["anchor"]) or "Substack post"}</a><span class="pr-src">via <a href="{it["source"]}">{html.escape(it["source_title"])}</a></span></li>' for it in substack)
     main = f'''<main class="press-page">
 <div class="page-frame">
   <header class="section-head">
-    <p class="eyebrow">Writing &amp; Documents</p>
+    <p class="eyebrow">Writing</p>
     <h1 class="section-title">Writing</h1>
-    <p>Long-form pieces and source documents archived on DocumentCloud and Substack.</p>
+    <p>Long-form on Substack.</p>
   </header>
-  <section class="pr-outlet" id="documentcloud"><h2>DocumentCloud</h2><ol class="pr-list">{dc_rows}</ol></section>
   <section class="pr-outlet" id="substack"><h2>Substack</h2><ol class="pr-list">{sb_rows}</ol></section>
 </div>
 </main>'''
@@ -463,6 +475,9 @@ ul,ol{list-style:none}
 .colophon-meta a{color:var(--bone-warm);border-bottom:1px solid transparent;transition:border-color .25s}
 .colophon-meta a:hover{border-color:var(--accent);color:var(--bone)}
 .colophon-fine{font-size:11px;color:var(--ink-faint);text-align:right}
+.bg-refs{padding:14px var(--frame-pad);border-top:1px solid rgba(239,235,227,.06);font-size:10px;line-height:1.8;color:rgba(239,235,227,.32);display:flex;flex-wrap:wrap;gap:6px 14px}
+.bg-refs a{color:rgba(239,235,227,.42);text-decoration:none;border-bottom:1px solid transparent;transition:color .25s,border-color .25s}
+.bg-refs a:hover{color:var(--accent);border-color:var(--accent)}
 
 @media (max-width:820px){
   .primary{display:none}.menu-toggle{display:flex!important}

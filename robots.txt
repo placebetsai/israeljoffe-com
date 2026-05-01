@@ -10,4 +10,4 @@ Disallow: /
 User-agent: Google-Extended
 Disallow: /
 
-Sitemap: https://israeljoffe.com/sitemap.xml
+Sitemap: https://israeljoffe.org/sitemap.xml
