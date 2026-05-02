@@ -49,6 +49,35 @@ except FileNotFoundError:
 home_page = next((p for p in wp_pages if p.get('is_home')), None)
 content_pages = [p for p in wp_pages if not p.get('is_home') and p.get('slug')]
 
+# --- Curated bio + photo pool for the homepage ---
+def _strip_html(h):
+    h = re.sub(r'<style[^>]*>.*?</style>', '', h or '', flags=re.S | re.I)
+    h = re.sub(r'<script[^>]*>.*?</script>', '', h, flags=re.S | re.I)
+    return re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', h)).strip()
+
+_about = next((p for p in wp_pages if p.get('slug') == 'about-me'), None) \
+      or next((p for p in wp_pages if p.get('slug') == 'about-extra'), None) \
+      or next((p for p in wp_pages if p.get('slug') == 'about'), None)
+
+if _about:
+    _bio_text = _strip_html(_about['body_html'])
+    _bio_paragraphs = [
+        "I was born and raised in NYC and spent most of my life there. I served as a firefighter for the Lawrence-Cedarhurst Fire Department during Hurricane Sandy until debilitating injuries forced me to move on. Moved to DC in 2016 and then down to the Palm Beach area in 2021.",
+        "I received my black belt in Brazilian Jiu-Jitsu from UFC Hall of Famer Matt Serra and was promoted to 2nd-degree black belt under WWE Hall of Famer Johnny Rodz. For years I trained at World of Unpredictable Wrestling in Brooklyn and helped build and maintain Johnny's websites and social media.",
+        "Worked corporate as a Senior Producer and Social Media Manager at Fox 5 News and ABC News Good Morning America, and as a Senior IT Executive at Starwood Hotels and Resorts / Marriott. Featured in Fox 5, Newsweek, Fox 29, NewsBreak, Getty Images, and Monday Night Wrestling.",
+    ]
+    _all_imgs = re.findall(r'src="(/img/[^"]+)"', _about['body_html'])
+    _seen = set(); _photo_pool = []
+    for _i in _all_imgs:
+        _low = _i.lower()
+        if _i in _seen: continue
+        if 'cropped' in _low or 'screenshot' in _low or 'og-default' in _low or _low.endswith('.gif'):
+            continue
+        _seen.add(_i); _photo_pool.append(_i)
+else:
+    _bio_paragraphs = []
+    _photo_pool = []
+
 def rewrite_imgs(body):
     """Replace external image URLs with local /img/ versions."""
     def sub(m):
@@ -299,7 +328,7 @@ def footer():
 </footer>
 <script>document.getElementById("year").textContent=new Date().getFullYear();
 (function(){{const t=document.querySelector(".menu-toggle"),d=document.getElementById("mobile-nav"),b=document.body;if(!t||!d)return;t.addEventListener("click",()=>{{const o=b.classList.toggle("menu-open");t.setAttribute("aria-expanded",o);d.setAttribute("aria-hidden",!o);}});document.querySelectorAll('.mobile-nav a').forEach(a=>a.addEventListener("click",()=>b.classList.remove("menu-open")));}})();
-(function(){{var els=document.querySelectorAll('.reveal,.hero,.press-strip,.recent,.section-head,.grid-card,.ct-card,.pr-outlet,.ar-year,.wpp-head,.wpp-body,.home-page-content');els.forEach(function(e){{e.classList.add('reveal')}});if(!('IntersectionObserver' in window)){{els.forEach(function(e){{e.classList.add('is-visible')}});return}}var io=new IntersectionObserver(function(es){{es.forEach(function(en){{if(en.isIntersecting){{en.target.classList.add('is-visible');io.unobserve(en.target)}}}})}},{{rootMargin:'0px 0px -8% 0px',threshold:0.05}});els.forEach(function(e){{io.observe(e)}});}})();
+(function(){{var els=document.querySelectorAll('.reveal,.hero,.press-strip,.recent,.section-head,.grid-card,.ct-card,.pr-outlet,.ar-year,.wpp-head,.wpp-body,.bio-snip,.photo-strip,.ps-tile');els.forEach(function(e){{e.classList.add('reveal')}});if(!('IntersectionObserver' in window)){{els.forEach(function(e){{e.classList.add('is-visible')}});return}}var io=new IntersectionObserver(function(es){{es.forEach(function(en){{if(en.isIntersecting){{en.target.classList.add('is-visible');io.unobserve(en.target)}}}})}},{{rootMargin:'0px 0px -8% 0px',threshold:0.05}});els.forEach(function(e){{io.observe(e)}});}})();
 </script>
 </body></html>'''
 
@@ -332,7 +361,7 @@ def render_post(p):
     return h + article + footer()
 
 def render_index():
-    recent = posts[:18]
+    recent = posts[:8]
     canonical = f'https://{SITE_HOST}/'
     desc = ('Israel Joffe — New York media executive, senior IT specialist, '
             "and former Lawrence-Cedarhurst firefighter. Brazilian Jiu-Jitsu 2nd-degree black belt under Johnny Rodz. "
@@ -344,16 +373,44 @@ def render_index():
         hero = img_map.get((p.get('hero') or '').split('?')[0], p.get('hero') or '')
         cards += f'''
     <a class="grid-card" href="{post_url(p)}">
-      <div class="gc-img">{f'<img src="{html.escape(hero)}" alt="" loading="lazy" />' if hero else ''}</div>
+      <div class="gc-img">{f'<img src="{html.escape(hero)}" alt="Israel Joffe" loading="lazy" />' if hero else ''}</div>
       <div class="gc-meta">
         <p class="gc-date">{fmt_date(p['date'])}</p>
         <h3 class="gc-title">{html.escape(p['title'])}</h3>
       </div>
     </a>'''
+    bio_html = ''
+    if _bio_paragraphs and _photo_pool:
+        portrait = _photo_pool[0]
+        bio_paras = ''.join(f'<p>{html.escape(t)}</p>' for t in _bio_paragraphs)
+        bio_html = f'''
+  <section class="bio-snip reveal" id="bio">
+    <div class="bs-frame">
+      <figure class="bs-portrait"><img src="{html.escape(portrait)}" alt="Israel Joffe" loading="lazy" /></figure>
+      <div class="bs-body">
+        <p class="eyebrow">About</p>
+        <h2 class="bs-title">Israel Joffe.</h2>
+        <div class="bs-prose">{bio_paras}</div>
+        <p class="bs-cta"><a class="link-cta" href="/about/">Read the full bio →</a></p>
+      </div>
+    </div>
+  </section>'''
+    photos_html = ''
+    if _photo_pool:
+        gallery = _photo_pool[1:13]
+        tiles = ''.join(
+            f'<a class="ps-tile" href="/photos/"><img src="{html.escape(src)}" alt="Israel Joffe" loading="lazy" /></a>'
+            for src in gallery
+        )
+        photos_html = f'''
+  <section class="photo-strip reveal" id="photos">
+    <header class="section-head"><h2 class="section-title">Photos</h2><a class="section-more" href="/photos/">All photos →</a></header>
+    <div class="ps-grid">{tiles}</div>
+  </section>'''
     main = f'''
 <main class="home">
   <section class="hero">
-    <picture class="hero-image" aria-hidden="true"><img src="/img/hero.jpg" alt="" loading="eager" /></picture>
+    <picture class="hero-image"><img src="/img/hero.jpg" alt="Israel Joffe" loading="eager" /></picture>
     <div class="hero-veil"></div>
     <div class="hero-frame">
       <p class="hero-eyebrow"><span class="rule"></span><span>{html.escape(TAGLINE)}</span></p>
@@ -380,12 +437,13 @@ def render_index():
       <a href="/press/#muckrack.com">Muck Rack</a>
     </div>
   </section>
+  {bio_html}
+  {photos_html}
   <section class="recent">
-    <header class="section-head"><h2 class="section-title">Recent</h2><a class="section-more" href="/archive/">All {len(posts)} posts →</a></header>
+    <header class="section-head"><h2 class="section-title">Recent writing</h2><a class="section-more" href="/archive/">All {len(posts)} posts →</a></header>
     <div class="grid">{cards}
     </div>
   </section>
-  {('<section class="home-page-content reveal"><div class="hpc-frame">' + home_page['body_html'] + '</div></section>') if home_page else ''}
 </main>
 '''
     return h + main + footer()
@@ -393,9 +451,19 @@ def render_index():
 def render_wp_page(p):
     """Render a recovered WordPress Page as a standalone route."""
     canonical = f'https://{SITE_HOST}/{p["slug"]}/'
-    desc_text = re.sub(r'<[^>]+>', ' ', p['body_html'])[:200].strip()
-    desc = f'Israel Joffe — {p["title"]}. {desc_text[:180]}'
-    h = head(p['title'] + ' · Israel Joffe', desc, canonical)
+    desc_text = _strip_html(p['body_html'])
+    SITE_DESC = ('New York media executive, senior IT specialist, and former Lawrence-Cedarhurst firefighter. '
+                 'BJJ 2nd-degree black belt under Johnny Rodz. Featured in Fox 5, Newsweek, Fox 29, NewsBreak, Getty Images.')
+    if len(desc_text) < 80:
+        desc = f'Israel Joffe — {SITE_DESC}'
+    else:
+        desc = f'Israel Joffe — {desc_text[:240]}'
+    page_title = p['title'].strip() or 'Israel Joffe'
+    if page_title.lower() == 'israel joffe':
+        title_tag = f'Israel Joffe — {p["slug"].replace("-", " ").title()}'
+    else:
+        title_tag = f'{page_title} · Israel Joffe'
+    h = head(title_tag, desc, canonical)
     main = f'''<main class="wp-page reveal"><div class="wpp-frame">
   <header class="wpp-head">
     <p class="eyebrow">Israel Joffe</p>
@@ -667,16 +735,32 @@ ul,ol{list-style:none}
 .wpp-body .wp-block-gallery img,.wpp-body .gallery img{margin:0;aspect-ratio:1;object-fit:cover}
 .wpp-body iframe,.wpp-body video{max-width:100%;margin:32px auto;display:block}
 .wpp-foot{margin-top:64px;padding-top:32px;border-top:1px solid var(--rule)}
-.home-page-content{padding:80px var(--frame-pad);background:var(--bone-soft);border-top:1px solid var(--rule)}
-.hpc-frame{max-width:980px;margin:0 auto;font-size:17px;line-height:1.75;color:var(--ink-soft)}
-.hpc-frame h1,.hpc-frame h2,.hpc-frame h3{font-family:var(--display);color:var(--ink);margin:32px 0 18px}
-.hpc-frame img{max-width:100%;height:auto;margin:24px auto;display:block;border-radius:4px}
-.hpc-frame p{margin-bottom:22px}
+/* Bio snip on homepage */
+.bio-snip{padding:clamp(72px,10vh,120px) var(--frame-pad);background:var(--bone-soft);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.bs-frame{max-width:var(--max);margin:0 auto;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(40px,6vw,80px);align-items:center}
+.bs-portrait{aspect-ratio:4/5;overflow:hidden;border-radius:4px;background:var(--ink);box-shadow:0 24px 60px -32px rgba(14,14,14,.45)}
+.bs-portrait img{width:100%;height:100%;object-fit:cover;object-position:center top;transition:transform 1.4s}
+.bs-portrait:hover img{transform:scale(1.03)}
+.bs-body .eyebrow{margin-bottom:14px}
+.bs-title{font-family:var(--display);font-weight:400;font-size:clamp(40px,5.4vw,68px);line-height:1;letter-spacing:-.018em;color:var(--ink);margin-bottom:24px}
+.bs-prose p{font-size:17px;line-height:1.75;color:var(--ink-soft);margin-bottom:18px;max-width:60ch}
+.bs-cta{margin-top:24px}
+.bs-cta a{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);border-bottom:1px solid currentColor;padding-bottom:2px}
+@media (max-width:780px){.bs-frame{grid-template-columns:1fr}.bs-portrait{aspect-ratio:4/5;max-width:420px;margin:0 auto}}
+
+/* Photo strip on homepage */
+.photo-strip{padding:clamp(64px,9vh,100px) var(--frame-pad) clamp(40px,6vh,72px);max-width:var(--max);margin:0 auto}
+.ps-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(10px,1.4vw,18px)}
+.ps-tile{aspect-ratio:1;overflow:hidden;background:var(--ink);border-radius:3px;display:block}
+.ps-tile img{width:100%;height:100%;object-fit:cover;transition:transform 1.4s,filter .4s;filter:saturate(.92)}
+.ps-tile:hover img{transform:scale(1.06);filter:saturate(1.05)}
+@media (max-width:900px){.ps-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:560px){.ps-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* Keti-style reveal-on-scroll entrance */
 .reveal{opacity:0;transform:translateY(14px);transition:opacity 1.1s cubic-bezier(.2,.7,.2,1),transform 1.1s cubic-bezier(.2,.7,.2,1)}
 .reveal.is-visible{opacity:1;transform:translateY(0)}
-.hero,.press-strip,.recent,.section-head,.grid-card,.ct-card,.pr-outlet,.ar-year,.wpp-head,.wpp-body{will-change:opacity,transform}
+.hero,.press-strip,.recent,.section-head,.grid-card,.ct-card,.pr-outlet,.ar-year,.wpp-head,.wpp-body,.bio-snip,.photo-strip,.ps-tile{will-change:opacity,transform}
 @media (prefers-reduced-motion:reduce){.reveal,.reveal.is-visible{opacity:1;transform:none;transition:none}}
 
 /* Contact */
