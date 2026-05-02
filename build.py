@@ -14,8 +14,24 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 SITE_HOST = os.environ.get('SITE_HOST', 'israeljoffe.com')  # override per site
 ACCENT = os.environ.get('ACCENT', '#c08a3e')  # gold for .com, override for .org
 TAGLINE = os.environ.get('TAGLINE', 'Media Executive · IT Specialist · Firefighter · Animal Lover · FDIC')
-HERO_LINE_1 = os.environ.get('HERO_LINE_1', 'Israel')
-HERO_LINE_2 = os.environ.get('HERO_LINE_2', 'Joffe.')
+
+# Verified canonical DocumentCloud references (HTTP 200 confirmed 2026-05-01).
+CURATED_DC = [
+    {'url': 'https://www.documentcloud.org/documents/21956651-document-from-the-lubavitch-rebbe-menachem-shneerson-israel-joffe/',
+     'anchor': 'Letter from the Lubavitcher Rebbe'},
+    {'url': 'https://www.documentcloud.org/documents/21956628-the-next-detroit_-the-catastrophic-collapse-of-atlantic-city-israel-joffe/',
+     'anchor': 'The Next Detroit — Atlantic City'},
+    {'url': 'https://www.documentcloud.org/documents/22064733-world-of-unpredictable-wrestling-at-gleasons-gym-israel-joffe/',
+     'anchor': 'WUW at Gleason’s Gym'},
+    {'url': 'https://www.documentcloud.org/documents/25895701-comgoogleandroidappsphotos/',
+     'anchor': 'Promoted to 2nd-degree black belt'},
+    {'url': 'https://www.documentcloud.org/documents/22014760-israel-joffe/',
+     'anchor': 'Israel Joffe (file)'},
+    {'url': 'https://www.documentcloud.org/documents/21952062-israel-joffe/',
+     'anchor': 'Israel Joffe (file)'},
+    {'url': 'https://www.documentcloud.org/documents/?q=%2Btag%3A%22Israel-joffe%22',
+     'anchor': 'All documents tagged Israel-joffe'},
+]
 
 all_pages = json.load(open(f'{ROOT}/_data/posts.json'))
 img_map = json.load(open(f'{ROOT}/_data/img-map.json'))
@@ -93,17 +109,15 @@ def dedupe_keep_best(items):
     return list(by_key.values())
 
 for host, items in ext_by_host.items():
-    if 'documentcloud' in host:
-        documentcloud.extend(dedupe_keep_best(items))
-    elif 'substack' in host:
+    if 'substack' in host:
         substack.extend(dedupe_keep_best(items))
     elif host in PRESS_HOSTS:
         for it in dedupe_keep_best(items):
             it['outlet'] = PRESS_HOSTS[host]
             press.append(it)
 
-# Final pass: dedupe across hosts (e.g. multiple substack subdomains)
-documentcloud = dedupe_keep_best(documentcloud)
+# DocumentCloud: use curated canonical list, not harvested.
+documentcloud = CURATED_DC
 substack = dedupe_keep_best(substack)
 
 # --- Templates ---
@@ -243,8 +257,8 @@ def render_index():
     <div class="hero-frame">
       <p class="hero-eyebrow"><span class="rule"></span><span>{html.escape(TAGLINE)}</span></p>
       <h1 class="hero-title">
-        <span class="hl-line"><span class="hl-word">{HERO_LINE_1}</span></span>
-        <span class="hl-line"><span class="hl-word hl-em">{HERO_LINE_2}</span></span>
+        <span class="hl-line"><span class="hl-word">Israel</span></span>
+        <span class="hl-line"><span class="hl-word hl-em">Joffe.</span></span>
       </h1>
       <p class="hero-sub">A media executive, IT specialist, firefighter, and writer based in New York.<br>
       Featured in Fox 5, Newsweek, Fox 29, NewsBreak.</p>
