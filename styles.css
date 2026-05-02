@@ -164,6 +164,13 @@ ul,ol{list-style:none}
 .bs-cta a{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);border-bottom:1px solid currentColor;padding-bottom:2px}
 @media (max-width:780px){.bs-frame{grid-template-columns:1fr}.bs-portrait{aspect-ratio:4/5;max-width:420px;margin:0 auto}}
 
+/* Archive CTA on homepage (replaces blog grid) */
+.archive-cta{padding:clamp(56px,8vh,96px) var(--frame-pad) clamp(72px,10vh,120px);max-width:var(--max);margin:0 auto;text-align:center;border-top:1px solid var(--rule)}
+.ac-frame{max-width:680px;margin:0 auto}
+.ac-frame .eyebrow{margin-bottom:14px}
+.ac-title{font-family:var(--display);font-weight:400;font-size:clamp(28px,4vw,46px);line-height:1.1;letter-spacing:-.012em;color:var(--ink);margin-bottom:18px}
+.ac-sub{font-size:17px;line-height:1.6;color:var(--ink-soft);margin-bottom:28px;max-width:54ch;margin-left:auto;margin-right:auto}
+
 /* Photo strip on homepage — compact thumbnail grid, face-favoring crop */
 .photo-strip{padding:clamp(56px,8vh,88px) var(--frame-pad) clamp(36px,5vh,64px);max-width:var(--max);margin:0 auto}
 .ps-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:clamp(8px,1vw,14px)}

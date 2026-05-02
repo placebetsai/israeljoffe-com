@@ -72,12 +72,23 @@ if _about:
                       'daniel-olah', 'pierre-leverrier', 'bulkan-evcimen', 'cropped',
                       'screenshot', 'og-default', 'sand-and-ocean', 'autumn-mood',
                       'baby', 'niece', 'nephew', 'kids', 'kid_', 'kid-', 'newborn', 'toddler')
-    # Hard exclusions — context-flagged photos with baby/kid/family content
+    # Hard exclusions — context-flagged photos with baby/kid/family/women content
+    # (Roxy = Israel's dog — those photos stay)
     _NO_SHOW = {
+        # baby/kid/family
         '/img/fb_img_1554497117146.jpg', '/img/20180523_193034.jpg',
         '/img/img_20201024_211210.jpg', '/img/img_20201125_142705.jpg',
         '/img/img202207181244423386257273156344851.jpg', '/img/img202207211116118823543630588432974.jpg',
         '/img/20230216_191118.jpg', '/img/20230224_135628.jpg',
+        # women / girls (sister, Gina, "her" context)
+        '/img/2012-11-30-20.24.14.jpg', '/img/2012-11-30-20.39.48.jpg',
+        '/img/2012-11-30-21.15.44.jpg', '/img/20201222_132935.jpg',
+        '/img/20210523_014006.jpg', '/img/2f91e-screenshot_20230416_114900_photos-2.jpg',
+        '/img/87c94-screenshot_20230416_153517_photos-1.jpg',
+        '/img/a4232-screenshot_20221222_235637_instagram.jpg',
+        '/img/f2156-20170429_150820-1.jpg', '/img/screenshot_20201223-233711.jpg',
+        '/img/screenshot_20230314_063905_chrome_converted.webp',
+        '/img/screenshot_20230314_064003_chrome.jpg',
     }
     for _i in _all_imgs:
         _low = _i.lower()
@@ -408,7 +419,7 @@ def render_index():
   </section>'''
     photos_html = ''
     if _photo_pool:
-        gallery = _photo_pool[1:13]
+        gallery = _photo_pool[1:25]
         tiles = ''.join(
             f'<a class="ps-tile" href="/photos/"><img src="{html.escape(src)}" alt="Israel Joffe" loading="lazy" /></a>'
             for src in gallery
@@ -432,8 +443,8 @@ def render_index():
       <p class="hero-sub">A media executive, IT specialist, firefighter, and writer based in New York.<br>
       Featured in Fox 5, Newsweek, Fox 29, NewsBreak.</p>
       <div class="hero-cta-row">
-        <a class="link-cta on-image" href="/writing/"><span>Read the writing</span></a>
-        <a class="link-fine on-image" href="/press/"><span class="dot"></span>Press &amp; mentions</a>
+        <a class="link-cta on-image" href="#bio"><span>About</span></a>
+        <a class="link-fine on-image" href="#photos"><span class="dot"></span>Photos</a>
       </div>
     </div>
   </section>
@@ -450,9 +461,12 @@ def render_index():
   </section>
   {bio_html}
   {photos_html}
-  <section class="recent">
-    <header class="section-head"><h2 class="section-title">Recent writing</h2><a class="section-more" href="/archive/">All {len(posts)} posts →</a></header>
-    <div class="grid">{cards}
+  <section class="archive-cta">
+    <div class="ac-frame">
+      <p class="eyebrow">Writing</p>
+      <h2 class="ac-title">{len(posts)} posts since 2020</h2>
+      <p class="ac-sub">Press, public service, BJJ, the FDIC, and life in New York. Six years of writing, archived.</p>
+      <p><a class="link-cta" href="/archive/">Read the archive →</a></p>
     </div>
   </section>
 </main>
@@ -758,6 +772,13 @@ ul,ol{list-style:none}
 .bs-cta{margin-top:24px}
 .bs-cta a{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);border-bottom:1px solid currentColor;padding-bottom:2px}
 @media (max-width:780px){.bs-frame{grid-template-columns:1fr}.bs-portrait{aspect-ratio:4/5;max-width:420px;margin:0 auto}}
+
+/* Archive CTA on homepage (replaces blog grid) */
+.archive-cta{padding:clamp(56px,8vh,96px) var(--frame-pad) clamp(72px,10vh,120px);max-width:var(--max);margin:0 auto;text-align:center;border-top:1px solid var(--rule)}
+.ac-frame{max-width:680px;margin:0 auto}
+.ac-frame .eyebrow{margin-bottom:14px}
+.ac-title{font-family:var(--display);font-weight:400;font-size:clamp(28px,4vw,46px);line-height:1.1;letter-spacing:-.012em;color:var(--ink);margin-bottom:18px}
+.ac-sub{font-size:17px;line-height:1.6;color:var(--ink-soft);margin-bottom:28px;max-width:54ch;margin-left:auto;margin-right:auto}
 
 /* Photo strip on homepage — compact thumbnail grid, face-favoring crop */
 .photo-strip{padding:clamp(56px,8vh,88px) var(--frame-pad) clamp(36px,5vh,64px);max-width:var(--max);margin:0 auto}
