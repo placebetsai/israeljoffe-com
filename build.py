@@ -41,6 +41,14 @@ posts = [p for p in all_pages if p.get('date')]
 posts.sort(key=lambda p: p['date'], reverse=True)
 # Pages = ALL crawled (used for backlink aggregation, since DC links live in undated pages too)
 
+# WordPress Pages (recovered from REST API) — rendered as standalone pages
+try:
+    wp_pages = json.load(open(f'{ROOT}/_data/wp-pages.json'))
+except FileNotFoundError:
+    wp_pages = []
+home_page = next((p for p in wp_pages if p.get('is_home')), None)
+content_pages = [p for p in wp_pages if not p.get('is_home') and p.get('slug')]
+
 def rewrite_imgs(body):
     """Replace external image URLs with local /img/ versions."""
     def sub(m):
@@ -239,6 +247,8 @@ def head(title, desc, canonical, og_image=None, og_type='website', published=Non
   <nav class="primary" aria-label="Primary">
     <a href="/">Home</a>
     <a href="/about/">About</a>
+    <a href="/photos/">Photos</a>
+    <a href="/bjj/">BJJ</a>
     <a href="/writing/">Writing</a>
     <a href="/press/">Press</a>
     <a href="/archive/">Archive</a>
@@ -252,6 +262,8 @@ def head(title, desc, canonical, og_image=None, og_type='website', published=Non
   <nav class="mobile-nav-inner" aria-label="Mobile primary">
     <a href="/">Home</a>
     <a href="/about/">About</a>
+    <a href="/photos/">Photos</a>
+    <a href="/bjj/">BJJ</a>
     <a href="/writing/">Writing</a>
     <a href="/press/">Press</a>
     <a href="/archive/">Archive</a>
@@ -287,6 +299,7 @@ def footer():
 </footer>
 <script>document.getElementById("year").textContent=new Date().getFullYear();
 (function(){{const t=document.querySelector(".menu-toggle"),d=document.getElementById("mobile-nav"),b=document.body;if(!t||!d)return;t.addEventListener("click",()=>{{const o=b.classList.toggle("menu-open");t.setAttribute("aria-expanded",o);d.setAttribute("aria-hidden",!o);}});document.querySelectorAll('.mobile-nav a').forEach(a=>a.addEventListener("click",()=>b.classList.remove("menu-open")));}})();
+(function(){{var els=document.querySelectorAll('.reveal,.hero,.press-strip,.recent,.section-head,.grid-card,.ct-card,.pr-outlet,.ar-year,.wpp-head,.wpp-body,.home-page-content');els.forEach(function(e){{e.classList.add('reveal')}});if(!('IntersectionObserver' in window)){{els.forEach(function(e){{e.classList.add('is-visible')}});return}}var io=new IntersectionObserver(function(es){{es.forEach(function(en){{if(en.isIntersecting){{en.target.classList.add('is-visible');io.unobserve(en.target)}}}})}},{{rootMargin:'0px 0px -8% 0px',threshold:0.05}});els.forEach(function(e){{io.observe(e)}});}})();
 </script>
 </body></html>'''
 
@@ -372,8 +385,25 @@ def render_index():
     <div class="grid">{cards}
     </div>
   </section>
+  {('<section class="home-page-content reveal"><div class="hpc-frame">' + home_page['body_html'] + '</div></section>') if home_page else ''}
 </main>
 '''
+    return h + main + footer()
+
+def render_wp_page(p):
+    """Render a recovered WordPress Page as a standalone route."""
+    canonical = f'https://{SITE_HOST}/{p["slug"]}/'
+    desc_text = re.sub(r'<[^>]+>', ' ', p['body_html'])[:200].strip()
+    desc = f'Israel Joffe — {p["title"]}. {desc_text[:180]}'
+    h = head(p['title'] + ' · Israel Joffe', desc, canonical)
+    main = f'''<main class="wp-page reveal"><div class="wpp-frame">
+  <header class="wpp-head">
+    <p class="eyebrow">Israel Joffe</p>
+    <h1 class="wpp-title">{html.escape(p["title"])}</h1>
+  </header>
+  <div class="wpp-body">{p["body_html"]}</div>
+  <footer class="wpp-foot"><a class="link-back" href="/">← Home</a></footer>
+</div></main>'''
     return h + main + footer()
 
 def render_archive():
@@ -617,6 +647,38 @@ ul,ol{list-style:none}
 .ap-lede{font-family:var(--display);font-size:clamp(22px,2.6vw,30px);font-style:italic;line-height:1.35;color:var(--ink);margin:18px 0 24px}
 .ap-body p{font-size:17px;line-height:1.7;color:var(--ink-soft);margin-bottom:18px;max-width:56ch}
 
+/* WordPress Pages — recovered content */
+.wp-page{padding:clamp(120px,16vh,180px) var(--frame-pad) clamp(80px,12vh,120px)}
+.wpp-frame{max-width:980px;margin:0 auto}
+.wpp-head{margin-bottom:48px;text-align:center;padding-bottom:32px;border-bottom:1px solid var(--rule)}
+.wpp-head .eyebrow{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:14px}
+.wpp-title{font-family:var(--display);font-size:clamp(40px,7vw,82px);line-height:1.05;letter-spacing:-.02em;color:var(--ink)}
+.wpp-body{font-size:17px;line-height:1.75;color:var(--ink-soft)}
+.wpp-body p{margin-bottom:22px;max-width:64ch}
+.wpp-body h1,.wpp-body h2,.wpp-body h3{font-family:var(--display);color:var(--ink);margin:48px 0 18px;letter-spacing:-.01em;line-height:1.15}
+.wpp-body h2{font-size:clamp(28px,3.6vw,40px)}
+.wpp-body h3{font-size:clamp(22px,2.8vw,30px)}
+.wpp-body img{max-width:100%;height:auto;margin:32px auto;display:block;border-radius:4px}
+.wpp-body a{color:var(--accent);border-bottom:1px solid currentColor;transition:opacity .2s}
+.wpp-body a:hover{opacity:.7}
+.wpp-body figure{margin:32px 0}
+.wpp-body figcaption{font-size:13px;color:var(--ink-mute);text-align:center;margin-top:8px;font-style:italic}
+.wpp-body .wp-block-gallery,.wpp-body .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:32px 0}
+.wpp-body .wp-block-gallery img,.wpp-body .gallery img{margin:0;aspect-ratio:1;object-fit:cover}
+.wpp-body iframe,.wpp-body video{max-width:100%;margin:32px auto;display:block}
+.wpp-foot{margin-top:64px;padding-top:32px;border-top:1px solid var(--rule)}
+.home-page-content{padding:80px var(--frame-pad);background:var(--bone-soft);border-top:1px solid var(--rule)}
+.hpc-frame{max-width:980px;margin:0 auto;font-size:17px;line-height:1.75;color:var(--ink-soft)}
+.hpc-frame h1,.hpc-frame h2,.hpc-frame h3{font-family:var(--display);color:var(--ink);margin:32px 0 18px}
+.hpc-frame img{max-width:100%;height:auto;margin:24px auto;display:block;border-radius:4px}
+.hpc-frame p{margin-bottom:22px}
+
+/* Keti-style reveal-on-scroll entrance */
+.reveal{opacity:0;transform:translateY(14px);transition:opacity 1.1s cubic-bezier(.2,.7,.2,1),transform 1.1s cubic-bezier(.2,.7,.2,1)}
+.reveal.is-visible{opacity:1;transform:translateY(0)}
+.hero,.press-strip,.recent,.section-head,.grid-card,.ct-card,.pr-outlet,.ar-year,.wpp-head,.wpp-body{will-change:opacity,transform}
+@media (prefers-reduced-motion:reduce){.reveal,.reveal.is-visible{opacity:1;transform:none;transition:none}}
+
 /* Contact */
 .contact-page{padding:clamp(120px,16vh,180px) var(--frame-pad) clamp(80px,12vh,120px)}
 .contact-frame{max-width:1080px;margin:0 auto}
@@ -671,6 +733,10 @@ write('archive/index.html', render_archive())
 write('press/index.html', render_press())
 write('writing/index.html', render_writing())
 write('contact/index.html', render_contact())
+
+# Render every recovered WordPress Page at /<slug>/
+for p in content_pages:
+    write(f'{p["slug"]}/index.html', render_wp_page(p))
 write('styles.css', render_styles())
 
 post_count = 0
@@ -681,7 +747,9 @@ for p in posts:
 
 # Sitemap (with image extension)
 sm = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemaps-image/1.1">']
-for path, prio in [('/', 1.0), ('/about/', 0.8), ('/writing/', 0.9), ('/press/', 0.9), ('/archive/', 0.7), ('/contact/', 0.85)]:
+_main_paths = [('/', 1.0), ('/about/', 0.8), ('/writing/', 0.9), ('/press/', 0.9), ('/archive/', 0.7), ('/contact/', 0.85)]
+_main_paths += [(f'/{p["slug"]}/', 0.7) for p in content_pages]
+for path, prio in _main_paths:
     sm.append(f'  <url><loc>https://{SITE_HOST}{path}</loc><priority>{prio}</priority><changefreq>weekly</changefreq></url>')
 for p in posts:
     hero = p.get('hero')
