@@ -70,10 +70,18 @@ if _about:
     _seen = set(); _photo_pool = []
     _STOCK_MARKERS = ('unsplash', 'pexels', 'jared-rice', 'michael-olsen', 'lachlan-dempsey',
                       'daniel-olah', 'pierre-leverrier', 'bulkan-evcimen', 'cropped',
-                      'screenshot', 'og-default', 'sand-and-ocean', 'autumn-mood')
+                      'screenshot', 'og-default', 'sand-and-ocean', 'autumn-mood',
+                      'baby', 'niece', 'nephew', 'kids', 'kid_', 'kid-', 'newborn', 'toddler')
+    # Hard exclusions — context-flagged photos with baby/kid/family content
+    _NO_SHOW = {
+        '/img/fb_img_1554497117146.jpg', '/img/20180523_193034.jpg',
+        '/img/img_20201024_211210.jpg', '/img/img_20201125_142705.jpg',
+        '/img/img202207181244423386257273156344851.jpg', '/img/img202207211116118823543630588432974.jpg',
+        '/img/20230216_191118.jpg', '/img/20230224_135628.jpg',
+    }
     for _i in _all_imgs:
         _low = _i.lower()
-        if _i in _seen: continue
+        if _i in _seen or _i in _NO_SHOW: continue
         if any(m in _low for m in _STOCK_MARKERS) or _low.endswith('.gif'):
             continue
         _seen.add(_i); _photo_pool.append(_i)
@@ -751,12 +759,12 @@ ul,ol{list-style:none}
 .bs-cta a{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);border-bottom:1px solid currentColor;padding-bottom:2px}
 @media (max-width:780px){.bs-frame{grid-template-columns:1fr}.bs-portrait{aspect-ratio:4/5;max-width:420px;margin:0 auto}}
 
-/* Photo strip on homepage */
+/* Photo strip on homepage — portrait-friendly with face-favoring crop */
 .photo-strip{padding:clamp(64px,9vh,100px) var(--frame-pad) clamp(40px,6vh,72px);max-width:var(--max);margin:0 auto}
 .ps-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(10px,1.4vw,18px)}
-.ps-tile{aspect-ratio:1;overflow:hidden;background:var(--ink);border-radius:3px;display:block}
-.ps-tile img{width:100%;height:100%;object-fit:cover;transition:transform 1.4s,filter .4s;filter:saturate(.92)}
-.ps-tile:hover img{transform:scale(1.06);filter:saturate(1.05)}
+.ps-tile{aspect-ratio:3/4;overflow:hidden;background:var(--ink);border-radius:3px;display:block}
+.ps-tile img{width:100%;height:100%;object-fit:cover;object-position:center 28%;transition:transform 1.4s,filter .4s;filter:saturate(.92)}
+.ps-tile:hover img{transform:scale(1.04);filter:saturate(1.05)}
 @media (max-width:900px){.ps-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:560px){.ps-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
