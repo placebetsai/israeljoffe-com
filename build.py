@@ -68,10 +68,13 @@ if _about:
     ]
     _all_imgs = re.findall(r'src="(/img/[^"]+)"', _about['body_html'])
     _seen = set(); _photo_pool = []
+    _STOCK_MARKERS = ('unsplash', 'pexels', 'jared-rice', 'michael-olsen', 'lachlan-dempsey',
+                      'daniel-olah', 'pierre-leverrier', 'bulkan-evcimen', 'cropped',
+                      'screenshot', 'og-default', 'sand-and-ocean', 'autumn-mood')
     for _i in _all_imgs:
         _low = _i.lower()
         if _i in _seen: continue
-        if 'cropped' in _low or 'screenshot' in _low or 'og-default' in _low or _low.endswith('.gif'):
+        if any(m in _low for m in _STOCK_MARKERS) or _low.endswith('.gif'):
             continue
         _seen.add(_i); _photo_pool.append(_i)
 else:
