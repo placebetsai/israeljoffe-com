@@ -242,6 +242,7 @@ def head(title, desc, canonical, og_image=None, og_type='website', published=Non
     <a href="/writing/">Writing</a>
     <a href="/press/">Press</a>
     <a href="/archive/">Archive</a>
+    <a href="/contact/">Contact</a>
   </nav>
   <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav">
     <span></span><span></span><span></span>
@@ -254,6 +255,7 @@ def head(title, desc, canonical, og_image=None, og_type='website', published=Non
     <a href="/writing/">Writing</a>
     <a href="/press/">Press</a>
     <a href="/archive/">Archive</a>
+    <a href="/contact/">Contact</a>
   </nav>
 </div>
 '''
@@ -412,6 +414,52 @@ def render_writing():
 </main>'''
     return h + main + footer()
 
+def render_contact():
+    canonical = f'https://{SITE_HOST}/contact/'
+    h = head('Contact · Israel Joffe', 'Reach Israel Joffe directly — email, LinkedIn, X, Substack, and Muck Rack press inbox.', canonical)
+    main = f'''<main class="contact-page">
+<div class="page-frame contact-frame">
+  <header class="ct-head">
+    <p class="eyebrow">Contact</p>
+    <h1 class="section-title">Get in touch</h1>
+    <p class="ct-lede">For press inquiries, speaking, or collaboration — pick the channel that suits you. I read every message.</p>
+  </header>
+  <div class="ct-grid">
+    <a class="ct-card" href="mailto:israeljoffe@gmail.com">
+      <p class="ct-h">Email</p>
+      <p class="ct-big">israeljoffe@gmail.com</p>
+      <p class="ct-d">Best for longer notes, press, partnerships.</p>
+    </a>
+    <a class="ct-card" href="https://muckrack.com/israel-joffe_" target="_blank" rel="noopener">
+      <p class="ct-h">Press · Muck Rack</p>
+      <p class="ct-big">muckrack.com/israel-joffe_</p>
+      <p class="ct-d">Verified press profile — pitch, fact-check, source requests.</p>
+    </a>
+    <a class="ct-card" href="https://www.linkedin.com/in/israeljoffe" target="_blank" rel="noopener">
+      <p class="ct-h">LinkedIn</p>
+      <p class="ct-big">linkedin.com/in/israeljoffe</p>
+      <p class="ct-d">Professional connection, work conversations.</p>
+    </a>
+    <a class="ct-card" href="https://x.com/IsraelJoffe3" target="_blank" rel="noopener">
+      <p class="ct-h">X · DMs open</p>
+      <p class="ct-big">@IsraelJoffe3</p>
+      <p class="ct-d">Quick public conversation, hot takes, links.</p>
+    </a>
+    <a class="ct-card" href="https://israeljoffe.substack.com/" target="_blank" rel="noopener">
+      <p class="ct-h">Substack</p>
+      <p class="ct-big">israeljoffe.substack.com</p>
+      <p class="ct-d">Subscribe to long-form essays.</p>
+    </a>
+    <a class="ct-card" href="https://www.instagram.com/israeljoffe" target="_blank" rel="noopener">
+      <p class="ct-h">Instagram</p>
+      <p class="ct-big">@israeljoffe</p>
+      <p class="ct-d">Photos · BJJ · travel.</p>
+    </a>
+  </div>
+</div>
+</main>'''
+    return h + main + footer()
+
 def render_about():
     canonical = f'https://{SITE_HOST}/about/'
     h = head('About · Israel Joffe', 'Israel Joffe — Media Executive, IT Specialist, Firefighter, BJJ practitioner, and writer based in New York.', canonical)
@@ -564,6 +612,19 @@ ul,ol{list-style:none}
 .ap-lede{font-family:var(--display);font-size:clamp(22px,2.6vw,30px);font-style:italic;line-height:1.35;color:var(--ink);margin:18px 0 24px}
 .ap-body p{font-size:17px;line-height:1.7;color:var(--ink-soft);margin-bottom:18px;max-width:56ch}
 
+/* Contact */
+.contact-page{padding:clamp(120px,16vh,180px) var(--frame-pad) clamp(80px,12vh,120px)}
+.contact-frame{max-width:1080px;margin:0 auto}
+.ct-head{margin-bottom:48px;text-align:center}
+.ct-head .eyebrow{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;font-weight:600}
+.ct-lede{font-family:var(--display);font-size:clamp(20px,2.2vw,24px);font-style:italic;line-height:1.45;color:var(--ink-soft);max-width:62ch;margin:18px auto 0}
+.ct-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.ct-card{display:block;padding:28px 26px;background:var(--bone-soft);border:1px solid var(--rule);border-radius:6px;transition:transform .35s ease,box-shadow .35s ease,border-color .35s,background .35s;color:var(--ink)}
+.ct-card:hover{transform:translateY(-3px);box-shadow:0 18px 40px -22px rgba(0,0,0,.25);border-color:var(--accent);background:#fff}
+.ct-card .ct-h{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:10px}
+.ct-card .ct-big{font-family:var(--display);font-size:clamp(20px,2.2vw,26px);line-height:1.2;color:var(--ink);margin-bottom:8px;word-break:break-word}
+.ct-card .ct-d{font-size:14px;color:var(--ink-mute);line-height:1.5}
+
 /* Footer */
 .colophon{background:var(--ink);color:var(--bone-warm);border-top:1px solid rgba(239,235,227,.08)}
 .colophon-frame{max-width:var(--max);margin:0 auto;padding:56px var(--frame-pad);display:grid;grid-template-columns:1fr 1fr 1fr;gap:48px;align-items:start}
@@ -604,6 +665,7 @@ write('about/index.html', render_about())
 write('archive/index.html', render_archive())
 write('press/index.html', render_press())
 write('writing/index.html', render_writing())
+write('contact/index.html', render_contact())
 write('styles.css', render_styles())
 
 post_count = 0
@@ -614,7 +676,7 @@ for p in posts:
 
 # Sitemap (with image extension)
 sm = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemaps-image/1.1">']
-for path, prio in [('/', 1.0), ('/about/', 0.8), ('/writing/', 0.9), ('/press/', 0.9), ('/archive/', 0.7)]:
+for path, prio in [('/', 1.0), ('/about/', 0.8), ('/writing/', 0.9), ('/press/', 0.9), ('/archive/', 0.7), ('/contact/', 0.85)]:
     sm.append(f'  <url><loc>https://{SITE_HOST}{path}</loc><priority>{prio}</priority><changefreq>weekly</changefreq></url>')
 for p in posts:
     hero = p.get('hero')
