@@ -121,8 +121,68 @@ documentcloud = CURATED_DC
 substack = dedupe_keep_best(substack)
 
 # --- Templates ---
-def head(title, desc, canonical, og_image=None):
+PERSON_LD = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Israel Joffe",
+    "url": f"https://{SITE_HOST}/",
+    "image": f"https://{SITE_HOST}/img/og-default-square.jpg",
+    "jobTitle": "Media Executive · IT Specialist · Firefighter",
+    "sameAs": [
+        "https://x.com/IsraelJoffe3",
+        "https://x.com/izzyJoffe",
+        "https://www.linkedin.com/in/israeljoffe",
+        "https://www.instagram.com/israeljoffe",
+        "https://muckrack.com/israel-joffe_",
+        "https://israeljoffe.substack.com/",
+        "https://www.youtube.com/izzyjoffe",
+        "https://medium.com/@israeljoffe",
+        "https://www.reddit.com/r/ISRAEL_JOFFE/",
+        "https://www.documentcloud.org/documents/?q=%2Btag%3A%22Israel-joffe%22",
+        "https://israeljoffe.com/",
+        "https://israeljoffe.org/",
+    ],
+}
+
+def head(title, desc, canonical, og_image=None, og_type='website', published=None, modified=None, post_title=None):
     og = og_image or f'https://{SITE_HOST}/img/og-default.jpg'
+    og_sq = f'https://{SITE_HOST}/img/og-default-square.jpg'
+    is_article = og_type == 'article'
+    ld_blocks = [PERSON_LD]
+    if is_article and published:
+        ld_blocks.append({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            "headline": post_title or title,
+            "datePublished": published,
+            "dateModified": modified or published,
+            "url": canonical,
+            "image": og,
+            "author": {"@type": "Person", "name": "Israel Joffe", "url": f"https://{SITE_HOST}/"},
+            "publisher": {"@type": "Person", "name": "Israel Joffe", "url": f"https://{SITE_HOST}/"},
+            "mainEntityOfPage": {"@type": "WebPage", "@id": canonical},
+        })
+    else:
+        ld_blocks.append({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "Israel Joffe",
+            "url": f"https://{SITE_HOST}/",
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": f"https://{SITE_HOST}/archive/?q={{search_term_string}}",
+                "query-input": "required name=search_term_string",
+            },
+        })
+    ld_json = '\n'.join(f'<script type="application/ld+json">{json.dumps(b, separators=(",", ":"))}</script>' for b in ld_blocks)
+    article_metas = ''
+    if is_article:
+        article_metas = (
+            (f'<meta property="article:published_time" content="{published}T00:00:00Z" />\n' if published else '')
+            + (f'<meta property="article:modified_time" content="{modified}T00:00:00Z" />\n' if modified else '')
+            + '<meta property="article:author" content="Israel Joffe" />\n'
+            + '<meta property="article:section" content="Personal" />\n'
+        )
     return f'''<!doctype html>
 <html lang="en">
 <head>
@@ -130,23 +190,45 @@ def head(title, desc, canonical, og_image=None):
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(desc)}" />
+<meta name="author" content="Israel Joffe" />
 <meta name="theme-color" content="#0e0e0e" />
-<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <link rel="canonical" href="{canonical}" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-<meta property="og:type" content="website" />
+<meta property="og:type" content="{og_type}" />
 <meta property="og:title" content="{html.escape(title)}" />
 <meta property="og:description" content="{html.escape(desc)}" />
 <meta property="og:url" content="{canonical}" />
 <meta property="og:site_name" content="Israel Joffe" />
+<meta property="og:locale" content="en_US" />
 <meta property="og:image" content="{og}" />
+<meta property="og:image:secure_url" content="{og}" />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Israel Joffe — {html.escape(TAGLINE)}" />
+<meta property="og:image" content="{og_sq}" />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="1200" />
+<meta property="og:image:alt" content="Israel Joffe (square)" />
 <meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="{html.escape(title)}" />
+<meta name="twitter:description" content="{html.escape(desc)}" />
 <meta name="twitter:image" content="{og}" />
+<meta name="twitter:image:alt" content="Israel Joffe — {html.escape(TAGLINE)}" />
+<meta name="twitter:site" content="@IsraelJoffe3" />
+<meta name="twitter:creator" content="@IsraelJoffe3" />
+{article_metas}<meta name="apple-mobile-web-app-title" content="Israel Joffe" />
+<meta name="application-name" content="Israel Joffe" />
+<meta name="format-detection" content="telephone=no" />
+<link rel="alternate" type="application/rss+xml" title="Israel Joffe — RSS" href="/feed.xml" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/styles.css?v=BUILD" />
+{ld_json}
 </head>
 <body>
 <div class="grain" aria-hidden="true"></div>
@@ -216,7 +298,8 @@ def render_post(p):
         og = None
     canonical = f'https://{SITE_HOST}{post_url(p)}'
     desc = (p.get('description') or html.unescape(re.sub(r'<[^>]+>', ' ', body)).strip())[:200] or p['title']
-    h = head(p['title'] + ' · Israel Joffe', desc, canonical, og)
+    h = head(p['title'] + ' · Israel Joffe', desc, canonical, og,
+             og_type='article', published=p.get('date'), modified=p.get('date'), post_title=p['title'])
     article = f'''
 <main class="post-page">
   <article class="post">
@@ -529,20 +612,51 @@ for p in posts:
     write(rel + 'index.html', render_post(p))
     post_count += 1
 
-# Sitemap
-sm = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+# Sitemap (with image extension)
+sm = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemaps-image/1.1">']
 for path, prio in [('/', 1.0), ('/about/', 0.8), ('/writing/', 0.9), ('/press/', 0.9), ('/archive/', 0.7)]:
-    sm.append(f'  <url><loc>https://{SITE_HOST}{path}</loc><priority>{prio}</priority></url>')
+    sm.append(f'  <url><loc>https://{SITE_HOST}{path}</loc><priority>{prio}</priority><changefreq>weekly</changefreq></url>')
 for p in posts:
-    sm.append(f'  <url><loc>https://{SITE_HOST}{post_url(p)}</loc><lastmod>{p["date"]}</lastmod><priority>0.6</priority></url>')
+    hero = p.get('hero')
+    img_xml = ''
+    if hero:
+        local = img_map.get(hero.split('?')[0], hero)
+        img_xml = f'<image:image><image:loc>https://{SITE_HOST}{local}</image:loc></image:image>'
+    sm.append(f'  <url><loc>https://{SITE_HOST}{post_url(p)}</loc><lastmod>{p["date"]}</lastmod><priority>0.6</priority>{img_xml}</url>')
 sm.append('</urlset>')
 write('sitemap.xml', '\n'.join(sm))
 
-# robots.txt
-write('robots.txt', f'User-agent: *\nAllow: /\n\nUser-agent: GPTBot\nDisallow: /\nUser-agent: ClaudeBot\nDisallow: /\nUser-agent: CCBot\nDisallow: /\nUser-agent: Google-Extended\nDisallow: /\n\nSitemap: https://{SITE_HOST}/sitemap.xml\n')
+# robots.txt — allow Google + Google-Extended (Gemini answers)
+write('robots.txt',
+      'User-agent: *\nAllow: /\n\n'
+      'User-agent: GPTBot\nDisallow: /\n'
+      'User-agent: ClaudeBot\nDisallow: /\n'
+      'User-agent: CCBot\nDisallow: /\n'
+      'User-agent: anthropic-ai\nDisallow: /\n'
+      'User-agent: PerplexityBot\nDisallow: /\n\n'
+      f'Sitemap: https://{SITE_HOST}/sitemap.xml\n')
+
+# RSS feed
+def rss_item(p):
+    canonical = f'https://{SITE_HOST}{post_url(p)}'
+    pub = datetime.strptime(p['date'], '%Y-%m-%d').strftime('%a, %d %b %Y 00:00:00 +0000')
+    desc_text = (p.get('description') or html.unescape(re.sub(r'<[^>]+>', ' ', p.get('body_html','')))[:300]).strip()
+    return f'<item><title>{html.escape(p["title"])}</title><link>{canonical}</link><guid>{canonical}</guid><pubDate>{pub}</pubDate><description>{html.escape(desc_text)}</description></item>'
+rss_items = ''.join(rss_item(p) for p in posts[:30])
+write('feed.xml', f'<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Israel Joffe</title><link>https://{SITE_HOST}/</link><description>{html.escape(TAGLINE)}</description><language>en-US</language>{rss_items}</channel></rss>')
 
 # _headers
-write('_headers', '/*\n  Cache-Control: public, max-age=0, must-revalidate\n\n/styles.css\n  Cache-Control: public, max-age=300, must-revalidate\n\n/img/*\n  Cache-Control: public, max-age=86400\n')
+write('_headers',
+      '/*\n'
+      '  Cache-Control: public, max-age=0, must-revalidate\n'
+      '  X-Content-Type-Options: nosniff\n'
+      '  Referrer-Policy: strict-origin-when-cross-origin\n'
+      '  Permissions-Policy: interest-cohort=()\n\n'
+      '/styles.css\n  Cache-Control: public, max-age=300, must-revalidate\n\n'
+      '/img/*\n  Cache-Control: public, max-age=31536000, immutable\n\n'
+      '/sitemap.xml\n  Content-Type: application/xml\n  Cache-Control: public, max-age=3600\n\n'
+      '/feed.xml\n  Content-Type: application/rss+xml; charset=utf-8\n  Cache-Control: public, max-age=3600\n\n'
+      '/robots.txt\n  Content-Type: text/plain\n  Cache-Control: public, max-age=86400\n')
 
 # favicon
 write('favicon.svg', '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#0e0e0e"/><text x="32" y="46" font-family="Georgia, serif" font-size="40" fill="#efebe3" text-anchor="middle" letter-spacing="-1"><tspan fill="''' + ACCENT + '''" font-style="italic">I</tspan><tspan>J</tspan></text></svg>''')
