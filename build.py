@@ -321,7 +321,10 @@ def render_post(p):
 def render_index():
     recent = posts[:18]
     canonical = f'https://{SITE_HOST}/'
-    desc = TAGLINE + '. ' + str(len(posts)) + ' posts since 2020.'
+    desc = ('Israel Joffe — New York media executive, senior IT specialist, '
+            "and former Lawrence-Cedarhurst firefighter. Brazilian Jiu-Jitsu 2nd-degree black belt under Johnny Rodz. "
+            'Featured in Fox 5, Newsweek, Fox 29, NewsBreak, and Getty Images. '
+            f'{len(posts)} posts since 2020 — writing, press, public service.')
     h = head('Israel Joffe — ' + TAGLINE, desc, canonical, f'https://{SITE_HOST}/img/og-default.jpg')
     cards = ''
     for p in recent:
@@ -375,7 +378,9 @@ def render_index():
 
 def render_archive():
     canonical = f'https://{SITE_HOST}/archive/'
-    h = head('Archive · Israel Joffe', f'All {len(posts)} posts on israeljoffe.{SITE_HOST.split(".")[-1]} since 2020.', canonical)
+    h = head('Archive · Israel Joffe',
+             f'Six years of writing — politics, technology, public service, BJJ, the FDIC, and life in New York. {len(posts)} posts since 2020.',
+             canonical)
     by_year = {}
     for p in posts: by_year.setdefault(p['date'][:4], []).append(p)
     yrs = ''
